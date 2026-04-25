@@ -17,6 +17,8 @@ setup(
     entry_points={
         "console_scripts": [
             "amz-sp=amazon_sp_cli.main:cli",
+            "amz-pricing=amazon_sp_cli.main:cli",
+            "asp=amazon_sp_cli.main:cli",
         ],
     },
     python_requires=">=3.8",
