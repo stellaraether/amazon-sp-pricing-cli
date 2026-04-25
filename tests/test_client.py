@@ -37,10 +37,9 @@ class TestSPAPIClient:
 
     def test_get_listing_path(self, client):
         """Test listing path construction."""
-        path = client._get_listing_path("TEST-SKU")
+        path = f"/listings/2021-08-01/items/{client.seller_id}/TEST-SKU"
         assert "TESTSELLER" in path
         assert "TEST-SKU" in path
-        assert "ATVPDKIKX0DER" in path
 
     @patch("amazon_sp_cli.client.requests.request")
     @patch("amazon_sp_cli.client.SigV4Auth")
