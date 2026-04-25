@@ -1,12 +1,12 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="amazon-sp-pricing-cli",
+    name="amazon-sp-cli",
     version="0.1.0",
-    description="CLI tool for Amazon SP-API pricing and discount management",
+    description="CLI tool for Amazon Selling Partner API (SP-API) operations",
     author="Lunan Li",
     author_email="lunan@stellaraether.com",
-    url="https://github.com/stellaraether/amazon-sp-pricing-cli",
+    url="https://github.com/stellaraether/amazon-sp-cli",
     packages=find_packages(),
     install_requires=[
         "click>=8.0",
@@ -16,7 +16,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "amz-pricing=amazon_sp_pricing_cli.main:cli",
+            "amz-sp=amazon_sp_cli.main:cli",
         ],
     },
     python_requires=">=3.8",

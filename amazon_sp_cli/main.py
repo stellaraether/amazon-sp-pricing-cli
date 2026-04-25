@@ -1,4 +1,4 @@
-"""Main CLI entry point for Amazon SP-API Pricing CLI."""
+"""Main CLI entry point for Amazon SP-API CLI."""
 
 import json
 from datetime import datetime, timezone
@@ -13,7 +13,7 @@ from .client import SPAPIClient
 @click.option("--credentials", "-c", help="Path to credentials YAML file")
 @click.pass_context
 def cli(ctx, credentials):
-    """Amazon SP-API Pricing CLI."""
+    """Amazon SP-API CLI - Manage listings, pricing, inventory, and more."""
     ctx.ensure_object(dict)
     ctx.obj["auth"] = SPAPIAuth(credentials)
     ctx.obj["client"] = SPAPIClient(ctx.obj["auth"])

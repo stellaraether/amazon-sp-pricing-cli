@@ -1,16 +1,24 @@
-# Amazon SP-API Pricing CLI
+# Amazon SP-API CLI
 
-Command line interface for Amazon Selling Partner API pricing and discount management.
+Command line interface for Amazon Selling Partner API (SP-API) operations.
+
+## Features
+
+- **Pricing Management** — Get/set prices, create discounts
+- **Listing Operations** — View and update listings
+- **Catalog Lookup** — Check competitor ASINs
+- **Inventory Checks** — View FBA inventory levels
+- **Feed Submissions** — Bulk updates via feeds API
 
 ## Installation
 
 ```bash
-pip install amazon-sp-pricing-cli
+pip install amazon-sp-cli
 ```
 
 ## Setup
 
-Create credentials file at `~/.config/amazon-sp-pricing/credentials.yml`:
+Create credentials file at `~/.config/amazon-sp-cli/credentials.yml`:
 
 ```yaml
 version: '1.0'
@@ -27,59 +35,58 @@ default:
 
 ## Usage
 
-### Get Current Price
+### Pricing
 
 ```bash
-# Get price for a SKU
-amz-pricing get-price PAW2603190101-BLU
+# Get current price
+amz-sp pricing get PAW2603190101-BLU
+
+# Set new price
+amz-sp pricing set PAW2603190101-BLU 11.99
+
+# Create discount feed
+amz-sp pricing discount PAW2603190101-BLU 23
 ```
 
-### Set Price
+### Listings
 
 ```bash
-# Update price for a SKU
-amz-pricing set-price PAW2603190101-BLU 11.99
+# Get listing details
+amz-sp listings get PAW2603190101-BLU
+
+# Update listing
+amz-sp listings update PAW2603190101-BLU --data '{...}'
 ```
 
-### Create Discount
+### Catalog
 
 ```bash
-# Generate discount feed (23% off)
-amz-pricing create-discount PAW2603190101-BLU 23
-
-# Apply discount to all variations
-amz-pricing create-discount --all-variations PAW2603190101 23
+# Check competitor
+amz-sp catalog get B0GW72JGWK
 ```
 
-### Check Competitors
+### Inventory
 
 ```bash
-# Check competitor pricing for an ASIN
-amz-pricing check-competitors B0GW72JGWK
-```
+# Get FBA inventory
+amz-sp inventory list
 
-### Bulk Operations
-
-```bash
-# Apply discount to multiple SKUs
-amz-pricing bulk-discount --file skus.txt --percent 20
-
-# Export pricing report
-amz-pricing export --format csv > pricing-report.csv
+# Get specific SKU
+amz-sp inventory get PAW2603190101-BLU
 ```
 
 ## Development
 
 ```bash
 # Clone repo
-git clone https://github.com/stellaraether/amazon-sp-pricing-cli.git
-cd amazon-sp-pricing-cli
+git clone https://github.com/stellaraether/amazon-sp-cli.git
+cd amazon-sp-cli
 
 # Install in editable mode
 pip install -e .
 
 # Run locally
-python3 -m amazon_sp_pricing_cli.main get-price PAW2603190101-BLU
+python3 -m amazon_sp_cli.main pricing get PAW2603190101-BLU
 ```
 
 ## Requirements
