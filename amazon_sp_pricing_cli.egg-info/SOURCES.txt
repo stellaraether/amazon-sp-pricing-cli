@@ -1,0 +1,12 @@
+README.md
+setup.py
+amazon_sp_pricing_cli/__init__.py
+amazon_sp_pricing_cli/auth.py
+amazon_sp_pricing_cli/client.py
+amazon_sp_pricing_cli/main.py
+amazon_sp_pricing_cli.egg-info/PKG-INFO
+amazon_sp_pricing_cli.egg-info/SOURCES.txt
+amazon_sp_pricing_cli.egg-info/dependency_links.txt
+amazon_sp_pricing_cli.egg-info/entry_points.txt
+amazon_sp_pricing_cli.egg-info/requires.txt
+amazon_sp_pricing_cli.egg-info/top_level.txt

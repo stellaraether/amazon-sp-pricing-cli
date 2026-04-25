@@ -1,0 +1,27 @@
+Metadata-Version: 2.4
+Name: amazon-sp-pricing-cli
+Version: 0.1.0
+Summary: CLI tool for Amazon SP-API pricing and discount management
+Home-page: https://github.com/stellaraether/amazon-sp-pricing-cli
+Author: Lunan Li
+Author-email: lunan@stellaraether.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Requires-Dist: click>=8.0
+Requires-Dist: requests>=2.27.0
+Requires-Dist: boto3>=1.20.0
+Requires-Dist: pyyaml>=6.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
