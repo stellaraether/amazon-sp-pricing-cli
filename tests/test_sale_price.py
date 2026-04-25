@@ -1,4 +1,4 @@
-"""Tests for coupon command."""
+"""Tests for sale-price command."""
 
 import json
 from unittest.mock import Mock, patch
@@ -9,8 +9,8 @@ from click.testing import CliRunner
 from amazon_sp_cli.main import cli
 
 
-class TestCreateCoupon:
-    """Test create-coupon command."""
+class TestSalePrice:
+    """Test sale-price command."""
 
     @pytest.fixture
     def mock_listing_response(self):
@@ -27,8 +27,8 @@ class TestCreateCoupon:
 
     @patch("amazon_sp_cli.main.SPAPIAuth")
     @patch("amazon_sp_cli.main.SPAPIClient")
-    def test_create_coupon_percentage(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
-        """Test creating a percentage coupon."""
+    def test_sale_price_percentage(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
+        """Test generating percentage sale price."""
         mock_client = Mock()
         mock_client.get_listing.return_value = mock_listing_response
         mock_client_class.return_value = mock_client
@@ -36,18 +36,18 @@ class TestCreateCoupon:
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        result = runner.invoke(cli, ["create-coupon", "TEST-SKU", "20"])
+        result = runner.invoke(cli, ["sale-price", "TEST-SKU", "20"])
 
         assert result.exit_code == 0
         assert "20.0%" in result.output
         assert "$29.99" in result.output
-        assert "$23.99" in result.output  # 20% off
-        assert "Seller Central" in result.output
+        assert "$23.99" in result.output
+        assert "feed_data" in result.output
 
     @patch("amazon_sp_cli.main.SPAPIAuth")
     @patch("amazon_sp_cli.main.SPAPIClient")
-    def test_create_coupon_fixed(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
-        """Test creating a fixed amount coupon."""
+    def test_sale_price_fixed(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
+        """Test generating fixed amount sale price."""
         mock_client = Mock()
         mock_client.get_listing.return_value = mock_listing_response
         mock_client_class.return_value = mock_client
@@ -55,16 +55,16 @@ class TestCreateCoupon:
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        result = runner.invoke(cli, ["create-coupon", "TEST-SKU", "5", "--type", "fixed"])
+        result = runner.invoke(cli, ["sale-price", "TEST-SKU", "5", "--type", "fixed"])
 
         assert result.exit_code == 0
         assert "$5" in result.output
-        assert "$24.99" in result.output  # $29.99 - $5
+        assert "$24.99" in result.output
 
     @patch("amazon_sp_cli.main.SPAPIAuth")
     @patch("amazon_sp_cli.main.SPAPIClient")
-    def test_create_coupon_with_options(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
-        """Test creating coupon with all options."""
+    def test_sale_price_with_dates(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
+        """Test generating sale price with custom dates."""
         mock_client = Mock()
         mock_client.get_listing.return_value = mock_listing_response
         mock_client_class.return_value = mock_client
@@ -75,12 +75,9 @@ class TestCreateCoupon:
         result = runner.invoke(
             cli,
             [
-                "create-coupon",
+                "sale-price",
                 "TEST-SKU",
                 "15",
-                "--prime-only",
-                "--budget",
-                "1000",
                 "--start-date",
                 "2026-05-01",
                 "--end-date",
@@ -89,15 +86,13 @@ class TestCreateCoupon:
         )
 
         assert result.exit_code == 0
-        assert "Prime Only: Yes" in result.output
-        assert "$1000" in result.output
         assert "2026-05-01" in result.output
         assert "2026-06-01" in result.output
 
     @patch("amazon_sp_cli.main.SPAPIAuth")
     @patch("amazon_sp_cli.main.SPAPIClient")
-    def test_create_coupon_output_file(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
-        """Test saving coupon to file."""
+    def test_sale_price_output_file(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
+        """Test saving sale price data to file."""
         mock_client = Mock()
         mock_client.get_listing.return_value = mock_listing_response
         mock_client_class.return_value = mock_client
@@ -106,20 +101,20 @@ class TestCreateCoupon:
         mock_auth_class.return_value = mock_auth
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["create-coupon", "TEST-SKU", "10", "-o", "coupon.json"])
+            result = runner.invoke(cli, ["sale-price", "TEST-SKU", "10", "-o", "sale-price.json"])
 
             assert result.exit_code == 0
             assert "saved to" in result.output
 
             # Verify file was created
-            with open("coupon.json") as f:
+            with open("sale-price.json") as f:
                 data = json.load(f)
-                assert data["coupon_specification"]["sku"] == "TEST-SKU"
-                assert data["coupon_specification"]["coupon_type"] == "percentage"
+                assert data["sku"] == "TEST-SKU"
+                assert data["pricing"]["discount_display"] == "10.0%"
 
     @patch("amazon_sp_cli.main.SPAPIAuth")
     @patch("amazon_sp_cli.main.SPAPIClient")
-    def test_create_coupon_no_price(self, mock_client_class, mock_auth_class, runner):
+    def test_sale_price_no_price(self, mock_client_class, mock_auth_class, runner):
         """Test error when listing has no price."""
         mock_client = Mock()
         mock_client.get_listing.return_value = {
@@ -131,7 +126,7 @@ class TestCreateCoupon:
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        result = runner.invoke(cli, ["create-coupon", "TEST-SKU", "20"])
+        result = runner.invoke(cli, ["sale-price", "TEST-SKU", "20"])
 
         assert result.exit_code != 0
         assert "Error" in result.output
