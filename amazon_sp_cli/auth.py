@@ -13,7 +13,7 @@ class SPAPIAuth:
     """Handles SP-API token refresh and caching."""
 
     TOKEN_ENDPOINT = "https://api.amazon.com/auth/o2/token"
-    CACHE_FILE = Path.home() / ".config" / "amazon-sp-pricing" / "token-cache.json"
+    CACHE_FILE = Path.home() / ".config" / "amazon-sp-cli" / "token-cache.json"
     BUFFER_SECONDS = 60
 
     def __init__(self, credentials_path: str = None):
@@ -23,7 +23,7 @@ class SPAPIAuth:
     def _load_credentials(self, path: str = None) -> dict:
         """Load credentials from YAML file."""
         if path is None:
-            path = Path.home() / ".config" / "amazon-sp-pricing" / "credentials.yml"
+            path = Path.home() / ".config" / "amazon-sp-cli" / "credentials.yml"
 
         with open(path, "r") as f:
             config = yaml.safe_load(f)
