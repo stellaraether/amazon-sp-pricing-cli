@@ -189,43 +189,33 @@ def create_discount(ctx, sku, percent, all_variations):
 @click.argument("discount", type=float)
 @click.option(
     "--type",
-    "coupon_type",
+    "discount_type",
     type=click.Choice(["percentage", "fixed"]),
     default="percentage",
-    help="Coupon type: percentage or fixed amount off",
+    help="Discount type: percentage or fixed amount off",
 )
-@click.option("--min-purchase", type=float, default=0, help="Minimum purchase amount required")
 @click.option("--start-date", help="Start date (YYYY-MM-DD). Defaults to today")
 @click.option("--end-date", help="End date (YYYY-MM-DD). Defaults to 30 days from start")
-@click.option("--budget", type=float, default=500, help="Total coupon budget in USD (default: 500)")
-@click.option("--customer-budget", type=float, help="Maximum discount per customer (defaults to full discount)")
-@click.option("--prime-only", is_flag=True, help="Prime members only")
-@click.option("--clip-coupon", is_flag=True, default=True, help="Require customers to clip coupon (default: True)")
-@click.option("--output", "-o", type=click.File("w"), help="Save coupon data to file")
+@click.option("--output", "-o", type=click.File("w"), help="Save price adjustment data to file")
 @click.pass_context
-def create_coupon(
+def sale_price(
     ctx,
     sku,
     discount,
-    coupon_type,
-    min_purchase,
+    discount_type,
     start_date,
     end_date,
-    budget,
-    customer_budget,
-    prime_only,
-    clip_coupon,
     output,
 ):
-    """Create a coupon for a SKU.
+    """Generate sale price data for a SKU.
 
-    Since SP-API doesn't support direct coupon creation, this generates
-    the coupon specification for use in Seller Central.
+    SP-API does not support direct sale price creation. This generates
+    the feed data you can submit via the Feeds API or use in Seller Central.
 
     Examples:
-        amz-sp create-coupon PAW2603190101 20
-        amz-sp create-coupon PAW2603190101 5 --type fixed --budget 1000
-        amz-sp create-coupon PAW2603190101 15 --prime-only --start-date 2026-05-01
+        amz-sp sale-price PAW2603190101 20
+        amz-sp sale-price PAW2603190101 5 --type fixed
+        amz-sp sale-price PAW2603190101 15 --start-date 2026-05-01 --end-date 2026-05-31
     """
     client = ctx.obj["client"]
 
@@ -251,94 +241,69 @@ def create_coupon(
         end_str = end.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Calculate discount values
-        if coupon_type == "percentage":
+        if discount_type == "percentage":
             discount_amount = round(current_price * discount / 100, 2)
             discount_display = f"{discount}%"
         else:
             discount_amount = discount
             discount_display = f"${discount}"
 
-        sale_price = max(0, current_price - discount_amount)
+        new_sale_price = max(0, current_price - discount_amount)
 
-        # Customer budget defaults to discount amount if not specified
-        per_customer = customer_budget or discount_amount
-
-        # Build coupon specification
-        coupon = {
-            "coupon_specification": {
-                "sku": sku,
-                "asin": response.get("summaries", [{}])[0].get("asin"),
-                "coupon_type": coupon_type,
-                "discount": {
-                    "percentage" if coupon_type == "percentage" else "fixed_amount": discount,
-                    "display": discount_display,
-                },
-                "pricing": {
-                    "original_price": current_price,
-                    "discounted_price": sale_price,
-                    "savings": discount_amount,
-                },
-                "requirements": {
-                    "minimum_purchase": min_purchase if min_purchase > 0 else None,
-                    "prime_only": prime_only,
-                    "clip_required": clip_coupon,
-                },
-                "schedule": {
-                    "start_date": start_str,
-                    "end_date": end_str,
-                    "duration_days": (end - start).days,
-                },
-                "budget": {
-                    "total_budget": budget,
-                    "per_customer_max": per_customer,
-                    "estimated_redemptions": int(budget / discount_amount) if discount_amount > 0 else 0,
-                },
-                "status": "DRAFT",
+        # Build sale price feed data
+        feed = {
+            "sku": sku,
+            "asin": response.get("summaries", [{}])[0].get("asin"),
+            "pricing": {
+                "original_price": current_price,
+                "sale_price": new_sale_price,
+                "discount_amount": discount_amount,
+                "discount_display": discount_display,
             },
-            "seller_central_steps": [
-                "1. Go to Seller Central → Advertising → Coupons",
-                "2. Click 'Create a new coupon'",
-                "3. Search for the ASIN or SKU above",
-                "4. Select discount type: " + ("Percentage Off" if coupon_type == "percentage" else "Money Off"),
-                "5. Enter discount value: " + str(discount),
-                "6. Set budget: $" + str(budget),
-                "7. Set schedule: " + start_str + " to " + end_str,
-                f"8. {'Enable Prime-only targeting' if prime_only else 'Target all customers'}",
-                "9. Review and submit",
-            ],
-            "notes": [
-                "Coupons typically take 4-8 hours to activate after submission",
-                "Amazon charges $0.60 per redemption (US marketplace)",
-                "Coupon will display on product detail page and search results",
-                f"Estimated cost per redemption: ${discount_amount + 0.60:.2f} (discount + Amazon fee)",
-            ],
+            "schedule": {
+                "start_date": start_str,
+                "end_date": end_str,
+                "duration_days": (end - start).days,
+            },
+            "feed_data": {
+                "messageId": 1,
+                "sku": sku,
+                "operationType": "PARTIAL_UPDATE",
+                "productType": "PET_TOY",
+                "attributes": {
+                    "list_price": [{"currency": "USD", "value": current_price}],
+                    "sale_price": [
+                        {
+                            "currency": "USD",
+                            "value": new_sale_price,
+                            "effective_date": start_str,
+                            "end_date": end_str,
+                        }
+                    ],
+                },
+            },
         }
 
-        # Remove None values
-        if coupon["coupon_specification"]["requirements"]["minimum_purchase"] is None:
-            del coupon["coupon_specification"]["requirements"]["minimum_purchase"]
-
         # Output
-        output_json = json.dumps(coupon, indent=2)
+        output_json = json.dumps(feed, indent=2)
 
         if output:
             output.write(output_json)
-            click.echo(f"✓ Coupon specification saved to {output.name}")
+            click.echo(f"✓ Sale price data saved to {output.name}")
 
         click.echo(output_json)
 
         # Summary
         click.echo("\n" + "=" * 50)
-        click.echo("SUMMARY")
+        click.echo("SALE PRICE SUMMARY")
         click.echo("=" * 50)
         click.echo(f"SKU: {sku}")
         click.echo(f"Discount: {discount_display}")
-        click.echo(f"Price: ${current_price} → ${sale_price}")
-        click.echo(f"Budget: ${budget}")
+        click.echo(f"Price: ${current_price} → ${new_sale_price}")
         click.echo(f"Duration: {start_str} to {end_str}")
-        click.echo(f"Prime Only: {'Yes' if prime_only else 'No'}")
-        click.echo("\n⚠️  SP-API does not support direct coupon creation.")
-        click.echo("   Use the Seller Central steps above to create the coupon.")
+        click.echo("\n⚠️  SP-API does not support direct sale price creation.")
+        click.echo("   Submit the feed_data above via the Feeds API")
+        click.echo("   or update manually in Seller Central.")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
