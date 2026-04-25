@@ -19,6 +19,9 @@ setup(
             "amz-sp=amazon_sp_cli.main:cli",
         ],
     },
+    data_files=[
+        ("share/amazon-sp-cli", ["README.md"]),
+    ],
     python_requires=">=3.8",
     classifiers=[
         "Development Status :: 3 - Alpha",

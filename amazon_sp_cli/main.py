@@ -9,11 +9,37 @@ from .auth import SPAPIAuth
 from .client import SPAPIClient
 
 
+def _check_path():
+    """Check if the CLI is accessible in PATH and warn if not."""
+    import shutil
+    import sys
+
+    if not shutil.which("amz-sp"):
+        print(
+            "\n⚠️  Note: 'amz-sp' is not in your PATH.",
+            file=sys.stderr,
+        )
+        print(
+            "   You can still use: python3 -m amazon_sp_cli",
+            file=sys.stderr,
+        )
+        print(
+            "   To add to PATH, add this to your shell config:",
+            file=sys.stderr,
+        )
+        print(
+            f'   export PATH="{sys.prefix}/bin:$PATH"',
+            file=sys.stderr,
+        )
+        print("", file=sys.stderr)
+
+
 @click.group()
 @click.option("--credentials", "-c", help="Path to credentials YAML file")
 @click.pass_context
 def cli(ctx, credentials):
     """Amazon SP-API CLI - Manage listings, pricing, inventory, and more."""
+    _check_path()
     ctx.ensure_object(dict)
     ctx.obj["auth"] = SPAPIAuth(credentials)
     ctx.obj["client"] = SPAPIClient(ctx.obj["auth"])
