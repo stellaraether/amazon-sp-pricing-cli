@@ -1,2 +1,0 @@
-[console_scripts]
-amz-pricing = amazon_sp_pricing_cli.main:cli

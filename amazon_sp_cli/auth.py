@@ -95,9 +95,11 @@ class SPAPIAuth:
 
     def invalidate(self):
         """Invalidate cached token."""
-        self._save_cache({
-            "access_token": None,
-            "expires_at": 0,
-            "refreshed_at": None,
-        })
+        self._save_cache(
+            {
+                "access_token": None,
+                "expires_at": 0,
+                "refreshed_at": None,
+            }
+        )
         print("Token cache invalidated.")

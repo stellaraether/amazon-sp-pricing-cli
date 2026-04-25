@@ -7,7 +7,6 @@ import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-from botocore.session import Session
 
 
 class SPAPIClient:

@@ -1,6 +1,5 @@
 """Tests for SP-API authentication."""
 
-import json
 import os
 import tempfile
 from pathlib import Path
@@ -18,12 +17,14 @@ class TestSPAPIAuth:
     def temp_credentials(self):
         """Create temporary credentials file."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
-            f.write("""
+            f.write(
+                """
 default:
   refresh_token: "test-refresh-token"
   client_id: "test-client-id"
   client_secret: "test-client-secret"
-""")
+"""
+            )
             path = f.name
         yield path
         os.unlink(path)
