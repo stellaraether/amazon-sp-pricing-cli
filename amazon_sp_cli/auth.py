@@ -20,10 +20,13 @@ class SPAPIAuth:
         self.credentials = self._load_credentials(credentials_path)
         self._ensure_cache_dir()
 
-    def _load_credentials(self, path: str = None) -> dict:
+    def _load_credentials(self, path: str = None) -> dict | None:
         """Load credentials from YAML file."""
         if path is None:
             path = Path.home() / ".config" / "amazon-sp-cli" / "credentials.yml"
+
+        if not Path(path).exists():
+            return None
 
         with open(path, "r") as f:
             config = yaml.safe_load(f)
