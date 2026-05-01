@@ -55,6 +55,18 @@ def _check_path():
     print("", file=sys.stderr)
 
 
+def _ensure_auth_client(ctx):
+    """Lazily create auth and client if not already present."""
+    if "client" not in ctx.obj:
+        auth = SPAPIAuth(ctx.obj.get("credentials_path"))
+        if auth.credentials is None:
+            click.echo("Error: No credentials found. Run 'amz-sp auth setup' first.", err=True)
+            raise click.Abort()
+        ctx.obj["auth"] = auth
+        ctx.obj["client"] = SPAPIClient(auth)
+    return ctx.obj["auth"], ctx.obj["client"]
+
+
 @click.group()
 @click.option("--credentials", "-c", help="Path to credentials YAML file")
 @click.pass_context
@@ -62,8 +74,7 @@ def cli(ctx, credentials):
     """Amazon SP-API CLI - Manage listings, pricing, inventory, and more."""
     _check_path()
     ctx.ensure_object(dict)
-    ctx.obj["auth"] = SPAPIAuth(credentials)
-    ctx.obj["client"] = SPAPIClient(ctx.obj["auth"])
+    ctx.obj["credentials_path"] = credentials
 
 
 @cli.group()
@@ -187,7 +198,7 @@ def auth_show(ctx, path):
 @click.pass_context
 def get_price(ctx, sku):
     """Get current price for a SKU."""
-    client = ctx.obj["client"]
+    _, client = _ensure_auth_client(ctx)
     try:
         response = client.get_listing(sku)
         attributes = response.get("attributes", {})
@@ -213,7 +224,7 @@ def get_price(ctx, sku):
 @click.pass_context
 def set_price(ctx, sku, price, dry_run):
     """Set price for a SKU."""
-    client = ctx.obj["client"]
+    _, client = _ensure_auth_client(ctx)
     try:
         mode = "VALIDATION_PREVIEW" if dry_run else None
         response = client.update_price(sku, price, mode)
@@ -238,7 +249,7 @@ def set_price(ctx, sku, price, dry_run):
 @click.pass_context
 def create_discount(ctx, sku, percent, all_variations):
     """Create discount for a SKU."""
-    client = ctx.obj["client"]
+    _, client = _ensure_auth_client(ctx)
 
     try:
         if all_variations:
@@ -337,7 +348,7 @@ def sale_price(
         amz-sp sale-price PAW2603190101 5 --type fixed
         amz-sp sale-price PAW2603190101 15 --start-date 2026-05-01 --end-date 2026-05-31
     """
-    client = ctx.obj["client"]
+    _, client = _ensure_auth_client(ctx)
 
     try:
         # Get current listing info
@@ -435,7 +446,7 @@ def sale_price(
 @click.pass_context
 def check_competitors(ctx, asin):
     """Check competitor pricing for an ASIN."""
-    client = ctx.obj["client"]
+    _, client = _ensure_auth_client(ctx)
     try:
         response = client.get_catalog_item(asin)
         attributes = response.get("attributes", {})
@@ -457,7 +468,8 @@ def check_competitors(ctx, asin):
 @click.pass_context
 def invalidate(ctx):
     """Invalidate cached access token."""
-    ctx.obj["auth"].invalidate()
+    auth, _ = _ensure_auth_client(ctx)
+    auth.invalidate()
 
 
 if __name__ == "__main__":
