@@ -1,4 +1,4 @@
-"""Tests for sale-price command."""
+"""Tests for pricing commands."""
 
 import json
 from unittest.mock import Mock, patch
@@ -25,8 +25,8 @@ class TestSalePrice:
         """Create Click test runner."""
         return CliRunner()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_sale_price_percentage(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
         """Test generating percentage sale price."""
         mock_client = Mock()
@@ -44,8 +44,8 @@ class TestSalePrice:
         assert "$23.99" in result.output
         assert "feed_data" in result.output
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_sale_price_fixed(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
         """Test generating fixed amount sale price."""
         mock_client = Mock()
@@ -61,8 +61,8 @@ class TestSalePrice:
         assert "$5" in result.output
         assert "$24.99" in result.output
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_sale_price_with_dates(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
         """Test generating sale price with custom dates."""
         mock_client = Mock()
@@ -89,8 +89,8 @@ class TestSalePrice:
         assert "2026-05-01" in result.output
         assert "2026-06-01" in result.output
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_sale_price_output_file(self, mock_client_class, mock_auth_class, runner, mock_listing_response):
         """Test saving sale price data to file."""
         mock_client = Mock()
@@ -112,8 +112,8 @@ class TestSalePrice:
                 assert data["sku"] == "TEST-SKU"
                 assert data["pricing"]["discount_display"] == "10.0%"
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_sale_price_no_price(self, mock_client_class, mock_auth_class, runner):
         """Test error when listing has no price."""
         mock_client = Mock()
