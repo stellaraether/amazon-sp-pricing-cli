@@ -9,6 +9,7 @@ Command line interface for Amazon Selling Partner API (SP-API) operations.
 - **Catalog Lookup** — Check competitor ASINs
 - **Inventory Checks** — View FBA inventory levels
 - **Feed Submissions** — Bulk updates via feeds API
+- **A+ Content** — Manage A+ Content documents and image uploads (requires Brand Registry)
 
 ## Installation
 
@@ -73,6 +74,42 @@ amz-sp inventory list
 
 # Get specific SKU
 amz-sp inventory get PAW2603190101-BLU
+```
+
+### A+ Content
+
+Requires Brand Registry.
+
+```bash
+# Upload an image (returns uploadDestinationId)
+amz-sp a-plus upload-image banner.jpg
+
+# Create content from JSON
+amz-sp a-plus create my-content --data content.json
+
+# Validate without creating
+amz-sp a-plus validate my-content --data content.json
+
+# Get content details (includes approval status)
+amz-sp a-plus get my-content
+
+# List all content documents
+amz-sp a-plus list
+
+# Update content
+amz-sp a-plus update my-content --data content.json
+
+# Delete content
+amz-sp a-plus delete my-content
+
+# Associate ASINs
+amz-sp a-plus asin add my-content B123456789 B987654321
+
+# List associated ASINs
+amz-sp a-plus asin list my-content
+
+# Remove ASIN associations
+amz-sp a-plus asin remove my-content B123456789
 ```
 
 ## Development

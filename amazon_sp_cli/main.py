@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import click
 import yaml
 
+from .a_plus import register_a_plus_commands
 from .auth import SPAPIAuth
 from .client import SPAPIClient
 
@@ -470,6 +471,9 @@ def invalidate(ctx):
     """Invalidate cached access token."""
     auth, _ = _ensure_auth_client(ctx)
     auth.invalidate()
+
+
+register_a_plus_commands(cli, _ensure_auth_client)
 
 
 if __name__ == "__main__":
