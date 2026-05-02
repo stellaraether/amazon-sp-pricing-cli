@@ -126,6 +126,17 @@ pip install -e .
 python3 -m amazon_sp_cli.main pricing get PAW2603190101-BLU
 ```
 
+## Releasing
+
+This repository uses automated releases. To publish a new version:
+
+1. Open a **standalone PR** that only bumps `version` in `setup.py`.
+2. The PR must not include code, test, or documentation changes — a CI check enforces this.
+3. Once the PR is merged to `main`, the `Auto Release` workflow detects the new version, creates a tag (e.g. `v0.2.1`), and pushes it.
+4. The tag push triggers the `Publish to PyPI` workflow, which runs the full test suite and publishes the package.
+
+Do not create tags manually.
+
 ## Requirements
 
 - Python 3.8+
