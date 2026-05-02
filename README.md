@@ -119,8 +119,15 @@ amz-sp a-plus asin remove my-content B123456789
 git clone https://github.com/stellaraether/amazon-sp-cli.git
 cd amazon-sp-cli
 
-# Install in editable mode
-pip install -e .
+# One-shot setup (creates venv, installs deps, sets up pre-commit)
+./setup.sh
+source .venv/bin/activate
+
+# Or manually
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pre-commit install
 
 # Run locally
 python3 -m amazon_sp_cli.main pricing get PAW2603190101-BLU
