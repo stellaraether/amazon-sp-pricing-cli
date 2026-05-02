@@ -6,7 +6,8 @@ from unittest.mock import Mock, patch
 import pytest
 from click.testing import CliRunner
 
-from amazon_sp_cli.a_plus import (
+from amazon_sp_cli.main import cli
+from amazon_sp_cli.models.a_plus import (
     APlusContentDocument,
     ContentModule,
     StandardTextModule,
@@ -14,7 +15,6 @@ from amazon_sp_cli.a_plus import (
     build_content_from_json,
     build_module_from_json,
 )
-from amazon_sp_cli.main import cli
 
 
 class TestDataModels:
@@ -132,8 +132,8 @@ class TestAPlusCLI:
     def runner(self):
         return CliRunner()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_create_dry_run(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client_class.return_value = mock_client
@@ -157,8 +157,8 @@ class TestAPlusCLI:
         assert "Content is valid" in result.output
         mock_client.create_a_plus_content.assert_not_called()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_create(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.create_a_plus_content.return_value = {}
@@ -183,8 +183,8 @@ class TestAPlusCLI:
         assert "A+ Content created" in result.output
         mock_client.create_a_plus_content.assert_called_once()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_validate(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.validate_a_plus_content.return_value = {}
@@ -209,8 +209,8 @@ class TestAPlusCLI:
         assert "API validation passed" in result.output
         mock_client.validate_a_plus_content.assert_called_once()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_validate_fails_local(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client_class.return_value = mock_client
@@ -227,8 +227,8 @@ class TestAPlusCLI:
         assert result.exit_code != 0
         mock_client.validate_a_plus_content.assert_not_called()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_get(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.get_a_plus_content.return_value = {"name": "test-doc"}
@@ -243,8 +243,8 @@ class TestAPlusCLI:
         assert "test-doc" in result.output
         mock_client.get_a_plus_content.assert_called_once_with("test-doc")
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_list(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.marketplace_id = "ATVPDKIKX0DER"
@@ -262,8 +262,8 @@ class TestAPlusCLI:
         assert "doc1" in result.output
         mock_client.list_a_plus_content.assert_called_once_with(marketplaceId="ATVPDKIKX0DER")
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_update(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.update_a_plus_content.return_value = {}
@@ -288,8 +288,8 @@ class TestAPlusCLI:
         assert "A+ Content updated" in result.output
         mock_client.update_a_plus_content.assert_called_once()
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_delete(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client_class.return_value = mock_client
@@ -302,8 +302,8 @@ class TestAPlusCLI:
         assert result.exit_code == 0
         mock_client.delete_a_plus_content.assert_called_once_with("test-doc")
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_asin_add(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.post_a_plus_content_asin_relations.return_value = {}
@@ -317,8 +317,8 @@ class TestAPlusCLI:
         assert result.exit_code == 0
         mock_client.post_a_plus_content_asin_relations.assert_called_once_with("test-doc", ["B123", "B456"])
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_asin_remove(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.delete_a_plus_content_asin_relations.return_value = {}
@@ -332,8 +332,8 @@ class TestAPlusCLI:
         assert result.exit_code == 0
         mock_client.delete_a_plus_content_asin_relations.assert_called_once_with("test-doc", ["B123"])
 
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_asin_list(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client.get_a_plus_content_asin_relations.return_value = {"asinSet": ["B123", "B456"]}
@@ -348,9 +348,9 @@ class TestAPlusCLI:
         assert "B123" in result.output
         mock_client.get_a_plus_content_asin_relations.assert_called_once_with("test-doc")
 
-    @patch("amazon_sp_cli.a_plus.requests.put")
-    @patch("amazon_sp_cli.main.SPAPIAuth")
-    @patch("amazon_sp_cli.main.SPAPIClient")
+    @patch("amazon_sp_cli.commands.a_plus.requests.put")
+    @patch("amazon_sp_cli.cli.SPAPIAuth")
+    @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_upload_image(self, mock_client_class, mock_auth_class, mock_put, runner):
         mock_client = Mock()
         mock_client.marketplace_id = "ATVPDKIKX0DER"
