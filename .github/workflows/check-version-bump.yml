@@ -1,0 +1,31 @@
+name: Check Version Bump PR
+
+on:
+  pull_request:
+    paths:
+      - 'setup.py'
+
+jobs:
+  check-isolated-version-bump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify version bump is isolated
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          OTHER_FILES=$(git diff --name-only "$BASE" "$HEAD" | grep -vE '^setup\.py$|^\.github/workflows/' || true)
+
+          if [ -n "$OTHER_FILES" ]; then
+            echo "❌ Version bump PRs must only modify setup.py (and workflow files)."
+            echo "Found other changed files:"
+            echo "$OTHER_FILES"
+            exit 1
+          fi
+
+          echo "✅ Version bump is isolated."
