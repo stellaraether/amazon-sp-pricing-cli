@@ -101,3 +101,82 @@ class SPAPIClient:
         }
         path += "?" + urlencode(params)
         return self.request("GET", path)
+
+    # --- A+ Content API ---
+
+    def create_a_plus_content(self, content_data: dict) -> dict:
+        """Create A+ Content document."""
+        path = "/aplus/2020-11-01/contentDocuments"
+        data = {"contentDocument": content_data}
+        return self.request("POST", path, data)
+
+    def validate_a_plus_content(self, content_data: dict) -> dict:
+        """Validate A+ Content without creating."""
+        path = "/aplus/2020-11-01/contentDocuments"
+        params = {"mode": "VALIDATION_PREVIEW"}
+        path += "?" + urlencode(params)
+        data = {"contentDocument": content_data}
+        return self.request("POST", path, data)
+
+    def update_a_plus_content(self, content_name: str, content_data: dict) -> dict:
+        """Update existing A+ Content document."""
+        path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
+        data = {"contentDocument": content_data}
+        return self.request("POST", path, data)
+
+    def get_a_plus_content(self, content_name: str) -> dict:
+        """Get A+ Content document by name."""
+        path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
+        return self.request("GET", path)
+
+    def list_a_plus_content(self, **filters) -> dict:
+        """List A+ Content documents."""
+        path = "/aplus/2020-11-01/contentDocuments"
+        if filters:
+            path += "?" + urlencode(filters)
+        return self.request("GET", path)
+
+    def delete_a_plus_content(self, content_name: str) -> dict:
+        """Delete A+ Content document."""
+        path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
+        return self.request("DELETE", path)
+
+    def get_a_plus_content_asin_relations(self, content_name: str) -> dict:
+        """Get ASIN relations for a content document."""
+        path = f"/aplus/2020-11-01/contentDocuments/{content_name}/asins"
+        return self.request("GET", path)
+
+    def post_a_plus_content_asin_relations(self, content_name: str, asin_set: list) -> dict:
+        """Associate ASINs with A+ Content document."""
+        path = "/aplus/2020-11-01/contentAsinRelations"
+        data = {"contentDocumentName": content_name, "asinSet": asin_set}
+        return self.request("POST", path, data)
+
+    def delete_a_plus_content_asin_relations(self, content_name: str, asin_set: list) -> dict:
+        """Remove ASIN associations from A+ Content document."""
+        path = "/aplus/2020-11-01/contentAsinRelations"
+        params = {"contentDocumentName": content_name}
+        path += "?" + urlencode(params)
+        data = {"asinSet": asin_set}
+        return self.request("DELETE", path, data)
+
+    def create_upload_destination(
+        self,
+        marketplace_id: str,
+        content_md5: str,
+        content_type: str,
+        file_name: str = None,
+        resource: str = None,
+    ) -> dict:
+        """Create an upload destination for a file."""
+        path = f"/uploads/2020-11-01/uploadDestinations/{marketplace_id}"
+        params = {
+            "contentMD5": content_md5,
+            "contentType": content_type,
+        }
+        if file_name:
+            params["fileName"] = file_name
+        if resource:
+            params["resource"] = resource
+        path += "?" + urlencode(params)
+        return self.request("POST", path)
