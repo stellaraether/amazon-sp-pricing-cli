@@ -40,40 +40,23 @@ default:
 
 ```bash
 # Get current price
-amz-sp pricing get PAW2603190101-BLU
+amz-sp get-price PAW2603190101-BLU
 
 # Set new price
-amz-sp pricing set PAW2603190101-BLU 11.99
+amz-sp set-price PAW2603190101-BLU 11.99
 
-# Create discount feed
-amz-sp pricing discount PAW2603190101-BLU 23
-```
+# Create sale price feed JSON
+amz-sp sale-price PAW2603190101-BLU 23
 
-### Listings
-
-```bash
-# Get listing details
-amz-sp listings get PAW2603190101-BLU
-
-# Update listing
-amz-sp listings update PAW2603190101-BLU --data '{...}'
+# Create discount feed JSON (legacy)
+amz-sp create-discount PAW2603190101-BLU 23
 ```
 
 ### Catalog
 
 ```bash
 # Check competitor
-amz-sp catalog get B0GW72JGWK
-```
-
-### Inventory
-
-```bash
-# Get FBA inventory
-amz-sp inventory list
-
-# Get specific SKU
-amz-sp inventory get PAW2603190101-BLU
+amz-sp check-competitors B0GW72JGWK
 ```
 
 ### A+ Content
@@ -130,7 +113,7 @@ pip install -r requirements-dev.txt
 pre-commit install
 
 # Run locally
-python3 -m amazon_sp_cli.main pricing get PAW2603190101-BLU
+python3 -m amazon_sp_cli get-price PAW2603190101-BLU
 ```
 
 ## Releasing
