@@ -18,14 +18,26 @@ class TextComponent:
 class ImageComponent:
     """Image component for A+ Content modules."""
 
-    def __init__(self, upload_destination_id: str, image_crop: dict = None):
+    def __init__(
+        self,
+        upload_destination_id: str,
+        image_crop: dict = None,
+        alt_text: str = None,
+        image_crop_specification: dict = None,
+    ):
         self.upload_destination_id = upload_destination_id
         self.image_crop = image_crop
+        self.alt_text = alt_text
+        self.image_crop_specification = image_crop_specification
 
     def to_dict(self) -> dict:
         result = {"uploadDestinationId": self.upload_destination_id}
         if self.image_crop:
             result["imageCrop"] = self.image_crop
+        if self.alt_text:
+            result["altText"] = self.alt_text
+        if self.image_crop_specification:
+            result["imageCropSpecification"] = self.image_crop_specification
         return result
 
 
@@ -166,7 +178,7 @@ class StandardCompanyLogoModule:
     def to_dict(self) -> dict:
         result = {}
         if self.company_logo:
-            result["companyLogo"] = {"image": self.company_logo.to_dict()}
+            result["companyLogo"] = self.company_logo.to_dict()
         return result
 
 
@@ -372,7 +384,15 @@ def build_module_from_json(data: dict) -> ContentModule:
         return ContentModule(
             module_type=module_type,
             standard_company_logo=StandardCompanyLogoModule(
-                company_logo=ImageComponent(data["imageId"]) if data.get("imageId") else None,
+                company_logo=(
+                    ImageComponent(
+                        data["imageId"],
+                        alt_text=data.get("altText"),
+                        image_crop_specification=data.get("imageCropSpecification"),
+                    )
+                    if data.get("imageId")
+                    else None
+                ),
             ),
         )
     else:

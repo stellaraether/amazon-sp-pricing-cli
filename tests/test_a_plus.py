@@ -113,11 +113,24 @@ class TestBuildFromJson:
         data = {
             "contentModuleType": "STANDARD_COMPANY_LOGO",
             "imageId": "logo-123",
+            "altText": "Company Logo",
+            "imageCropSpecification": {
+                "size": {
+                    "width": {"value": 600, "units": "pixels"},
+                    "height": {"value": 180, "units": "pixels"},
+                },
+                "offset": {
+                    "x": {"value": 0, "units": "pixels"},
+                    "y": {"value": 0, "units": "pixels"},
+                },
+            },
         }
         mod = build_module_from_json(data)
         assert mod.module_type == "STANDARD_COMPANY_LOGO"
         result = mod.to_dict()
-        assert result["standardCompanyLogo"]["companyLogo"]["image"]["uploadDestinationId"] == "logo-123"
+        assert result["standardCompanyLogo"]["companyLogo"]["uploadDestinationId"] == "logo-123"
+        assert result["standardCompanyLogo"]["companyLogo"]["altText"] == "Company Logo"
+        assert result["standardCompanyLogo"]["companyLogo"]["imageCropSpecification"]["size"]["width"]["value"] == 600
 
     def test_standard_company_logo_module_to_dict_empty(self):
         mod = StandardCompanyLogoModule()
@@ -147,6 +160,76 @@ class TestBuildFromJson:
         result = mod.to_dict()
         assert result["standardComparisonTable"]["headline"]["value"] == "Compare"
         assert result["standardComparisonTable"]["comparisonTableRows"][0]["name"] == "Feature"
+
+    def test_integration_full_document_from_json(self):
+        data = {
+            "modules": [
+                {
+                    "moduleType": "STANDARD_COMPANY_LOGO",
+                    "imageId": "aplus-media/sc/76a7fb65-607b-4e96-a3fa-a145d1397725.jpg",
+                    "altText": "Pawified Logo",
+                    "imageCropSpecification": {
+                        "size": {
+                            "width": {"value": 600, "units": "pixels"},
+                            "height": {"value": 180, "units": "pixels"},
+                        },
+                        "offset": {
+                            "x": {"value": 0, "units": "pixels"},
+                            "y": {"value": 0, "units": "pixels"},
+                        },
+                    },
+                },
+                {
+                    "moduleType": "STANDARD_IMAGE_TEXT",
+                    "headline": "Pure Joy in Every Bite",
+                    "body": "Treat your feline friend to the finest premium catnip...",
+                    "imageId": "aplus-media/sc/77967e76-a03c-4514-85e1-371e7f2395d1.jpg",
+                },
+                {
+                    "moduleType": "STANDARD_IMAGE_TEXT",
+                    "headline": "100% Natural & Safe",
+                    "body": "Made in the USA with all-natural...",
+                    "imageId": "aplus-media/sc/215948ec-b306-4a0b-8491-f1342dc83f91.jpg",
+                },
+                {
+                    "moduleType": "STANDARD_IMAGE_TEXT",
+                    "headline": "Perfect for Playtime",
+                    "body": "Each 2-pack includes convenient 5g sachets...",
+                    "imageId": "aplus-media/sc/2e6493d5-e7a4-4c3a-8e47-a78e5f5b4802.jpg",
+                },
+                {
+                    "moduleType": "STANDARD_IMAGE_TEXT",
+                    "headline": "Premium Quality You Can Trust",
+                    "body": "Pawified is committed to delivering premium pet products...",
+                    "imageId": "aplus-media/sc/ef864286-0fec-4472-ad20-8b7dfee4922e.jpg",
+                },
+            ]
+        }
+        doc = build_content_from_json("pawified-catnip", data)
+        assert doc.name == "pawified-catnip"
+        assert len(doc.content_module_list) == 5
+        assert doc.content_module_list[0].module_type == "STANDARD_COMPANY_LOGO"
+        assert doc.content_module_list[1].module_type == "STANDARD_IMAGE_TEXT"
+
+        result = doc.to_dict()
+        modules = result["contentModuleList"]
+        assert len(modules) == 5
+
+        logo_module = modules[0]["standardCompanyLogo"]
+        assert "image" not in logo_module["companyLogo"]
+        assert (
+            logo_module["companyLogo"]["uploadDestinationId"]
+            == "aplus-media/sc/76a7fb65-607b-4e96-a3fa-a145d1397725.jpg"
+        )
+        assert logo_module["companyLogo"]["altText"] == "Pawified Logo"
+        assert logo_module["companyLogo"]["imageCropSpecification"]["size"]["width"]["value"] == 600
+
+        for i in range(1, 5):
+            mod = modules[i]["standardImageText"]
+            assert "headline" in mod
+            assert "body" in mod
+            assert "image" in mod
+            assert mod["image"]["uploadDestinationId"].startswith("aplus-media/sc/")
 
 
 class TestAPlusCLI:
