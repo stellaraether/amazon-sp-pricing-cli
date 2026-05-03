@@ -104,58 +104,68 @@ class SPAPIClient:
 
     # --- A+ Content API ---
 
+    def _add_marketplace_param(self, path: str) -> str:
+        """Append marketplaceId query param to A+ Content paths."""
+        separator = "&" if "?" in path else "?"
+        return f"{path}{separator}marketplaceId={self.marketplace_id}"
+
     def create_a_plus_content(self, content_data: dict) -> dict:
         """Create A+ Content document."""
-        path = "/aplus/2020-11-01/contentDocuments"
+        path = self._add_marketplace_param("/aplus/2020-11-01/contentDocuments")
         data = {"contentDocument": content_data}
         return self.request("POST", path, data)
 
     def validate_a_plus_content(self, content_data: dict) -> dict:
         """Validate A+ Content without creating."""
         path = "/aplus/2020-11-01/contentDocuments"
-        params = {"mode": "VALIDATION_PREVIEW"}
+        params = {"mode": "VALIDATION_PREVIEW", "marketplaceId": self.marketplace_id}
         path += "?" + urlencode(params)
         data = {"contentDocument": content_data}
         return self.request("POST", path, data)
 
     def update_a_plus_content(self, content_name: str, content_data: dict) -> dict:
         """Update existing A+ Content document."""
-        path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
+        path = self._add_marketplace_param(f"/aplus/2020-11-01/contentDocuments/{content_name}")
         data = {"contentDocument": content_data}
         return self.request("POST", path, data)
 
     def get_a_plus_content(self, content_name: str) -> dict:
         """Get A+ Content document by name."""
         path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
+        params = {"marketplaceId": self.marketplace_id, "includedDataSet": "CONTENTS"}
+        path += "?" + urlencode(params)
         return self.request("GET", path)
 
     def list_a_plus_content(self, **filters) -> dict:
         """List A+ Content documents."""
         path = "/aplus/2020-11-01/contentDocuments"
-        if filters:
-            path += "?" + urlencode(filters)
+        params = {"marketplaceId": self.marketplace_id}
+        params.update(filters)
+        path += "?" + urlencode(params)
         return self.request("GET", path)
 
-    def delete_a_plus_content(self, content_name: str) -> dict:
-        """Delete A+ Content document."""
-        path = f"/aplus/2020-11-01/contentDocuments/{content_name}"
-        return self.request("DELETE", path)
+    def suspend_a_plus_content(self, content_reference_key: str) -> dict:
+        """Suspend A+ Content document (API does not support delete)."""
+        path = f"/aplus/2020-11-01/contentDocuments/{content_reference_key}/suspendSubmissions"
+        params = {"marketplaceId": self.marketplace_id}
+        path += "?" + urlencode(params)
+        return self.request("POST", path)
 
     def get_a_plus_content_asin_relations(self, content_name: str) -> dict:
         """Get ASIN relations for a content document."""
-        path = f"/aplus/2020-11-01/contentDocuments/{content_name}/asins"
+        path = self._add_marketplace_param(f"/aplus/2020-11-01/contentDocuments/{content_name}/asins")
         return self.request("GET", path)
 
     def post_a_plus_content_asin_relations(self, content_name: str, asin_set: list) -> dict:
         """Associate ASINs with A+ Content document."""
-        path = "/aplus/2020-11-01/contentAsinRelations"
+        path = self._add_marketplace_param("/aplus/2020-11-01/contentAsinRelations")
         data = {"contentDocumentName": content_name, "asinSet": asin_set}
         return self.request("POST", path, data)
 
     def delete_a_plus_content_asin_relations(self, content_name: str, asin_set: list) -> dict:
         """Remove ASIN associations from A+ Content document."""
         path = "/aplus/2020-11-01/contentAsinRelations"
-        params = {"contentDocumentName": content_name}
+        params = {"contentDocumentName": content_name, "marketplaceId": self.marketplace_id}
         path += "?" + urlencode(params)
         data = {"asinSet": asin_set}
         return self.request("DELETE", path, data)
