@@ -16,10 +16,7 @@ jobs:
 
       - name: Verify version bump is isolated
         run: |
-          BASE="${{ github.event.pull_request.base.sha }}"
-          HEAD="${{ github.event.pull_request.head.sha }}"
-
-          CHANGED_FILES=$(git diff --name-only "$BASE" "$HEAD")
+          CHANGED_FILES=$(git diff --name-only origin/main HEAD)
 
           if ! echo "$CHANGED_FILES" | grep -q '^amazon_sp_cli/__init__\.py$'; then
             echo "⏭️ amazon_sp_cli/__init__.py not changed; skipping version bump isolation check."
