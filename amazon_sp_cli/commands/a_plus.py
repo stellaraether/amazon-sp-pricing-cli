@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import os
+import urllib.parse
 
 import click
 import requests
@@ -147,7 +148,9 @@ def register_a_plus_commands(cli_group, ensure_auth_client):
     @a_plus.command("upload-image")
     @click.argument("file-path", type=click.Path(exists=True))
     @click.option("--content-type", default="image/jpeg", help="MIME type of the image")
-    @click.option("--resource", default="aplus", help="Resource type for upload destination")
+    @click.option(
+        "--resource", default="aplus/2020-11-01/contentDocuments", help="Resource type for upload destination"
+    )
     @click.pass_context
     @handle_errors
     def upload_image(ctx, file_path, content_type, resource):
@@ -172,18 +175,21 @@ def register_a_plus_commands(cli_group, ensure_auth_client):
         payload = response.get("payload", response)
         upload_destination_id = payload.get("uploadDestinationId")
         upload_url = payload.get("url")
-        headers = payload.get("headers", [])
 
         if not upload_url:
             click.echo("Error: No upload URL returned", err=True)
             raise click.Abort()
 
-        upload_headers = {h["name"]: h["value"] for h in headers}
-        upload_headers.setdefault("Content-Type", content_type)
-        upload_headers.setdefault("Content-MD5", content_md5)
+        parsed = urllib.parse.urlparse(upload_url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        form_fields = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
 
-        put_response = requests.put(upload_url, data=file_data, headers=upload_headers)
-        put_response.raise_for_status()
+        post_response = requests.post(
+            base_url,
+            data=form_fields,
+            files={"File": (file_name, file_data, content_type)},
+        )
+        post_response.raise_for_status()
 
         click.echo(f"Upload successful: {file_name}")
         click.echo(f"uploadDestinationId: {upload_destination_id}")

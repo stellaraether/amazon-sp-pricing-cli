@@ -38,7 +38,7 @@ class SPAPIClient:
 
         # Create the request
         url = f"https://{self.HOST}{path}"
-        body = json.dumps(data) if data else ""
+        body = json.dumps(data) if data is not None else ""
 
         # Create AWS request for signing
         request = AWSRequest(method=method, url=url, headers=headers, data=body)
@@ -169,14 +169,13 @@ class SPAPIClient:
         resource: str = None,
     ) -> dict:
         """Create an upload destination for a file."""
-        path = f"/uploads/2020-11-01/uploadDestinations/{marketplace_id}"
+        path = f"/uploads/2020-11-01/uploadDestinations/{resource}"
         params = {
+            "marketplaceIds": marketplace_id,
             "contentMD5": content_md5,
             "contentType": content_type,
         }
         if file_name:
             params["fileName"] = file_name
-        if resource:
-            params["resource"] = resource
         path += "?" + urlencode(params)
         return self.request("POST", path)

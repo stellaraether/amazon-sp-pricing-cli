@@ -348,24 +348,34 @@ class TestAPlusCLI:
         assert "B123" in result.output
         mock_client.get_a_plus_content_asin_relations.assert_called_once_with("test-doc")
 
-    @patch("amazon_sp_cli.commands.a_plus.requests.put")
+    @patch("amazon_sp_cli.commands.a_plus.requests.post")
     @patch("amazon_sp_cli.cli.SPAPIAuth")
     @patch("amazon_sp_cli.cli.SPAPIClient")
-    def test_upload_image(self, mock_client_class, mock_auth_class, mock_put, runner):
+    def test_upload_image(self, mock_client_class, mock_auth_class, mock_post, runner):
         mock_client = Mock()
         mock_client.marketplace_id = "ATVPDKIKX0DER"
         mock_client.create_upload_destination.return_value = {
-            "uploadDestinationId": "upload-123",
-            "url": "https://s3.amazonaws.com/presigned-url",
-            "headers": [{"name": "Content-Type", "value": "image/jpeg"}],
+            "payload": {
+                "uploadDestinationId": "upload-123",
+                "url": (
+                    "https://aplus-media.s3.amazonaws.com/"
+                    "?x-amz-date=20251003T113949Z"
+                    "&x-amz-signature=sig"
+                    "&acl=private"
+                    "&key=sc/image.jpg"
+                    "&x-amz-algorithm=AWS4-HMAC-SHA256"
+                    "&policy=pol"
+                    "&x-amz-credential=cred"
+                ),
+            }
         }
         mock_client_class.return_value = mock_client
 
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        mock_put.return_value = Mock()
-        mock_put.return_value.raise_for_status = Mock()
+        mock_post.return_value = Mock()
+        mock_post.return_value.raise_for_status = Mock()
 
         with runner.isolated_filesystem():
             with open("test-image.jpg", "wb") as f:
@@ -376,4 +386,9 @@ class TestAPlusCLI:
         assert result.exit_code == 0
         assert "upload-123" in result.output
         mock_client.create_upload_destination.assert_called_once()
-        mock_put.assert_called_once()
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        assert call_args[0][0] == "https://aplus-media.s3.amazonaws.com/"
+        assert call_args[1]["data"]["key"] == "sc/image.jpg"
+        assert call_args[1]["data"]["acl"] == "private"
+        assert "File" in call_args[1]["files"]
