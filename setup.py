@@ -1,8 +1,15 @@
+import os
+import re
+
 from setuptools import find_packages, setup
+
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, "amazon_sp_cli", "__init__.py")) as f:
+    version = re.search(r'__version__ = "([^"]+)"', f.read()).group(1)
 
 setup(
     name="amazon-sp-cli",
-    version="0.2.2",
+    version=version,
     description="CLI tool for Amazon Selling Partner API (SP-API) operations",
     author="Lunan Li",
     author_email="lunan@stellaraether.com",
