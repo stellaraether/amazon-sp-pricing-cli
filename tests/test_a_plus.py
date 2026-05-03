@@ -19,17 +19,19 @@ from amazon_sp_cli.models.a_plus import (
 
 class TestDataModels:
     def test_text_component_to_dict(self):
-        tc = TextComponent("Hello", "BOLD")
-        assert tc.to_dict() == {"value": "Hello", "decoration": "BOLD"}
+        tc = TextComponent("Hello", [{"type": "BOLD"}])
+        assert tc.to_dict() == {"value": "Hello", "decoratorSet": [{"type": "BOLD"}]}
 
     def test_standard_text_module_to_dict(self):
+        from amazon_sp_cli.models.a_plus import ParagraphComponent
+
         mod = StandardTextModule(
             headline=TextComponent("Headline"),
-            body=TextComponent("Body text"),
+            body=ParagraphComponent(text_list=[TextComponent("Body text")]),
         )
         result = mod.to_dict()
         assert result["headline"]["value"] == "Headline"
-        assert result["body"]["value"] == "Body text"
+        assert result["body"]["textList"][0]["value"] == "Body text"
 
     def test_content_module_wrapper(self):
         mod = ContentModule(
@@ -39,7 +41,7 @@ class TestDataModels:
             ),
         )
         result = mod.to_dict()
-        assert result["moduleType"] == "STANDARD_TEXT"
+        assert result["contentModuleType"] == "STANDARD_TEXT"
         assert result["standardText"]["headline"]["value"] == "H"
 
     def test_document_validation_passes(self):
@@ -64,7 +66,7 @@ class TestDataModels:
     def test_document_validation_invalid_type(self):
         doc = APlusContentDocument(name="test")
         doc.content_module_list = [ContentModule("INVALID_TYPE")]
-        assert "invalid moduleType" in doc.validate()[0]
+        assert "invalid contentModuleType" in doc.validate()[0]
 
     def test_document_validation_empty_module(self):
         doc = APlusContentDocument(name="test")
@@ -88,12 +90,12 @@ class TestDataModels:
 class TestBuildFromJson:
     def test_build_content_from_json(self):
         data = {
-            "locale": "en_US",
+            "locale": "en-US",
             "modules": [{"moduleType": "STANDARD_TEXT", "headline": "Hello", "body": "World"}],
         }
         doc = build_content_from_json("my-doc", data)
         assert doc.name == "my-doc"
-        assert doc.locale == "en_US"
+        assert doc.locale == "en-US"
         assert len(doc.content_module_list) == 1
         assert doc.content_module_list[0].module_type == "STANDARD_TEXT"
 
@@ -231,17 +233,17 @@ class TestAPlusCLI:
     @patch("amazon_sp_cli.cli.SPAPIClient")
     def test_get(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
-        mock_client.get_a_plus_content.return_value = {"name": "test-doc"}
+        mock_client.get_a_plus_content.return_value = {"contentRecord": {"contentDocument": {"name": "test-doc"}}}
         mock_client_class.return_value = mock_client
 
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        result = runner.invoke(cli, ["a-plus", "get", "test-doc"])
+        result = runner.invoke(cli, ["a-plus", "get", "abc123"])
 
         assert result.exit_code == 0
         assert "test-doc" in result.output
-        mock_client.get_a_plus_content.assert_called_once_with("test-doc")
+        mock_client.get_a_plus_content.assert_called_once_with("abc123")
 
     @patch("amazon_sp_cli.cli.SPAPIAuth")
     @patch("amazon_sp_cli.cli.SPAPIClient")
@@ -290,17 +292,17 @@ class TestAPlusCLI:
 
     @patch("amazon_sp_cli.cli.SPAPIAuth")
     @patch("amazon_sp_cli.cli.SPAPIClient")
-    def test_delete(self, mock_client_class, mock_auth_class, runner):
+    def test_suspend(self, mock_client_class, mock_auth_class, runner):
         mock_client = Mock()
         mock_client_class.return_value = mock_client
 
         mock_auth = Mock()
         mock_auth_class.return_value = mock_auth
 
-        result = runner.invoke(cli, ["a-plus", "delete", "test-doc"], input="y\n")
+        result = runner.invoke(cli, ["a-plus", "suspend", "test-doc"], input="y\n")
 
         assert result.exit_code == 0
-        mock_client.delete_a_plus_content.assert_called_once_with("test-doc")
+        mock_client.suspend_a_plus_content.assert_called_once_with("test-doc")
 
     @patch("amazon_sp_cli.cli.SPAPIAuth")
     @patch("amazon_sp_cli.cli.SPAPIClient")

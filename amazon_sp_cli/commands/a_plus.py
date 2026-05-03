@@ -81,13 +81,13 @@ def register_a_plus_commands(cli_group, ensure_auth_client):
             click.echo(json.dumps(response, indent=2))
 
     @a_plus.command("get")
-    @click.argument("content-name")
+    @click.argument("content-reference-key")
     @click.pass_context
     @handle_errors
-    def get_content(ctx, content_name):
-        """Get A+ Content document."""
+    def get_content(ctx, content_reference_key):
+        """Get A+ Content document by contentReferenceKey."""
         _, client = ensure_auth_client(ctx)
-        response = client.get_a_plus_content(content_name)
+        response = client.get_a_plus_content(content_reference_key)
         click.echo(json.dumps(response, indent=2))
 
     @a_plus.command("list")
@@ -134,16 +134,16 @@ def register_a_plus_commands(cli_group, ensure_auth_client):
         if response:
             click.echo(json.dumps(response, indent=2))
 
-    @a_plus.command("delete")
-    @click.argument("content-name")
-    @click.confirmation_option(prompt="Delete this A+ Content?")
+    @a_plus.command("suspend")
+    @click.argument("content-reference-key")
+    @click.confirmation_option(prompt="Suspend this A+ Content?")
     @click.pass_context
     @handle_errors
-    def delete_content(ctx, content_name):
-        """Delete A+ Content document."""
+    def suspend_content(ctx, content_reference_key):
+        """Suspend A+ Content document (API does not support delete)."""
         _, client = ensure_auth_client(ctx)
-        client.delete_a_plus_content(content_name)
-        click.echo(f"A+ Content deleted: {content_name}")
+        client.suspend_a_plus_content(content_reference_key)
+        click.echo(f"A+ Content suspended: {content_reference_key}")
 
     @a_plus.command("upload-image")
     @click.argument("file-path", type=click.Path(exists=True))

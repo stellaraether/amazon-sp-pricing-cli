@@ -4,12 +4,15 @@
 class TextComponent:
     """Text component for A+ Content modules."""
 
-    def __init__(self, value: str, decoration: str = "NONE"):
+    def __init__(self, value: str, decorator_set: list = None):
         self.value = value
-        self.decoration = decoration
+        self.decorator_set = decorator_set or []
 
     def to_dict(self) -> dict:
-        return {"value": self.value, "decoration": self.decoration}
+        result = {"value": self.value}
+        if self.decorator_set:
+            result["decoratorSet"] = self.decorator_set
+        return result
 
 
 class ImageComponent:
@@ -109,6 +112,16 @@ class StandardComparisonTableModule:
         return result
 
 
+class ParagraphComponent:
+    """Paragraph component containing a list of text."""
+
+    def __init__(self, text_list: list = None):
+        self.text_list = text_list or []
+
+    def to_dict(self) -> dict:
+        return {"textList": [t.to_dict() for t in self.text_list]}
+
+
 class StandardTextModule:
     """Standard Text-only module."""
 
@@ -178,7 +191,7 @@ class ContentModule:
         self.standard_image_text_overlay = standard_image_text_overlay
 
     def to_dict(self) -> dict:
-        result = {"moduleType": self.module_type}
+        result = {"contentModuleType": self.module_type}
         field_name = self.MODULE_TYPES.get(self.module_type)
 
         if field_name == "standardImageText" and self.standard_image_text:
@@ -203,11 +216,11 @@ class ContentModule:
         issues = []
 
         if not self.module_type:
-            issues.append(f"Module {index + 1}: moduleType is required")
+            issues.append(f"Module {index + 1}: contentModuleType is required")
             return issues
 
         if self.module_type not in self.MODULE_TYPES:
-            issues.append(f"Module {index + 1}: invalid moduleType '{self.module_type}'")
+            issues.append(f"Module {index + 1}: invalid contentModuleType '{self.module_type}'")
             return issues
 
         data = self.to_dict()
@@ -224,7 +237,7 @@ class APlusContentDocument:
         self,
         name: str,
         content_type: str = "EBC",
-        locale: str = "en_US",
+        locale: str = "en-US",
         content_module_list: list = None,
     ):
         self.name = name
@@ -262,7 +275,7 @@ def build_content_from_json(name: str, data: dict) -> APlusContentDocument:
     """Build APlusContentDocument from JSON dict."""
     content = APlusContentDocument(
         name=name,
-        locale=data.get("locale", "en_US"),
+        locale=data.get("locale", "en-US"),
     )
 
     for mod_data in data.get("modules", []):
@@ -318,11 +331,14 @@ def build_module_from_json(data: dict) -> ContentModule:
             ),
         )
     elif module_type == "STANDARD_TEXT":
+        body = None
+        if data.get("body"):
+            body = ParagraphComponent(text_list=[TextComponent(data["body"])])
         return ContentModule(
             module_type=module_type,
             standard_text=StandardTextModule(
                 headline=TextComponent(data["headline"]) if data.get("headline") else None,
-                body=TextComponent(data["body"]) if data.get("body") else None,
+                body=body,
             ),
         )
     elif module_type == "STANDARD_IMAGE_TEXT_OVERLAY":
