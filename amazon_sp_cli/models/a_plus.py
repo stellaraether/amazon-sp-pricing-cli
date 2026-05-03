@@ -76,6 +76,26 @@ class StandardSingleImageModule:
         return result
 
 
+class StandardSingleSideImageModule:
+    """Standard Single Side Image module."""
+
+    def __init__(self, image=None, description=None, image_position_type="LEFT"):
+        self.image = image
+        self.description = description
+        self.image_position_type = image_position_type
+
+    def to_dict(self) -> dict:
+        result = {"imagePositionType": self.image_position_type}
+        block = {}
+        if self.image:
+            block["image"] = self.image.to_dict()
+        if self.description:
+            block["description"] = self.description.to_dict()
+        if block:
+            result["block"] = block
+        return result
+
+
 class StandardMultipleImageTextModule:
     """Standard Multiple Image & Text module."""
 
@@ -192,6 +212,7 @@ class ContentModule:
     MODULE_TYPES = {
         "STANDARD_IMAGE_TEXT": "standardImageTextOverlay",
         "STANDARD_SINGLE_IMAGE": "standardSingleImage",
+        "STANDARD_SINGLE_SIDE_IMAGE": "standardSingleSideImage",
         "STANDARD_MULTIPLE_IMAGE_TEXT": "standardMultipleImageText",
         "STANDARD_FOUR_IMAGE_TEXT": "standardFourImageText",
         "STANDARD_COMPARISON_TABLE": "standardComparisonTable",
@@ -205,6 +226,7 @@ class ContentModule:
         module_type: str,
         standard_image_text: StandardImageTextModule = None,
         standard_single_image: StandardSingleImageModule = None,
+        standard_single_side_image: StandardSingleSideImageModule = None,
         standard_multiple_image_text: StandardMultipleImageTextModule = None,
         standard_four_image_text: StandardFourImageTextModule = None,
         standard_comparison_table: StandardComparisonTableModule = None,
@@ -215,6 +237,7 @@ class ContentModule:
         self.module_type = module_type
         self.standard_image_text = standard_image_text
         self.standard_single_image = standard_single_image
+        self.standard_single_side_image = standard_single_side_image
         self.standard_multiple_image_text = standard_multiple_image_text
         self.standard_four_image_text = standard_four_image_text
         self.standard_comparison_table = standard_comparison_table
@@ -230,6 +253,8 @@ class ContentModule:
             result["standardImageTextOverlay"] = self.standard_image_text_overlay.to_dict()
         elif field_name == "standardSingleImage" and self.standard_single_image:
             result["standardSingleImage"] = self.standard_single_image.to_dict()
+        elif field_name == "standardSingleSideImage" and self.standard_single_side_image:
+            result["standardSingleSideImage"] = self.standard_single_side_image.to_dict()
         elif field_name == "standardMultipleImageText" and self.standard_multiple_image_text:
             result["standardMultipleImageText"] = self.standard_multiple_image_text.to_dict()
         elif field_name == "standardFourImageText" and self.standard_four_image_text:
@@ -355,6 +380,26 @@ def build_module_from_json(data: dict) -> ContentModule:
                     else None
                 ),
                 image_caption=TextComponent(data["caption"]) if data.get("caption") else None,
+            ),
+        )
+    elif module_type == "STANDARD_SINGLE_SIDE_IMAGE":
+        description = None
+        if data.get("description"):
+            description = ParagraphComponent(text_list=[TextComponent(data["description"])])
+        return ContentModule(
+            module_type=module_type,
+            standard_single_side_image=StandardSingleSideImageModule(
+                image=(
+                    ImageComponent(
+                        data["imageId"],
+                        alt_text=data.get("altText"),
+                        image_crop_specification=data.get("imageCropSpecification"),
+                    )
+                    if data.get("imageId")
+                    else None
+                ),
+                description=description,
+                image_position_type=data.get("imagePositionType", "LEFT"),
             ),
         )
     elif module_type == "STANDARD_MULTIPLE_IMAGE_TEXT":

@@ -166,6 +166,21 @@ class TestBuildFromJson:
         assert result["standardImageTextOverlay"]["block"]["headline"]["value"] == "H"
         assert result["standardImageTextOverlay"]["block"]["body"]["textList"][0]["value"] == "B"
 
+    def test_build_module_single_side_image(self):
+        data = {
+            "moduleType": "STANDARD_SINGLE_SIDE_IMAGE",
+            "imageId": "img-1",
+            "altText": "Side",
+            "description": "Desc",
+            "imagePositionType": "RIGHT",
+        }
+        mod = build_module_from_json(data)
+        assert mod.module_type == "STANDARD_SINGLE_SIDE_IMAGE"
+        result = mod.to_dict()
+        assert result["standardSingleSideImage"]["imagePositionType"] == "RIGHT"
+        assert result["standardSingleSideImage"]["block"]["image"]["uploadDestinationId"] == "img-1"
+        assert result["standardSingleSideImage"]["block"]["description"]["textList"][0]["value"] == "Desc"
+
     def test_build_module_comparison_table(self):
         data = {
             "moduleType": "STANDARD_COMPARISON_TABLE",
