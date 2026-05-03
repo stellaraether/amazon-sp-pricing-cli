@@ -10,6 +10,7 @@ from amazon_sp_cli.main import cli
 from amazon_sp_cli.models.a_plus import (
     APlusContentDocument,
     ContentModule,
+    StandardCompanyLogoModule,
     StandardTextModule,
     TextComponent,
     build_content_from_json,
@@ -102,6 +103,25 @@ class TestBuildFromJson:
     def test_build_module_from_json_unknown_type(self):
         with pytest.raises(ValueError, match="Unsupported moduleType"):
             build_module_from_json({"moduleType": "UNKNOWN"})
+
+    def test_build_module_from_json_uses_content_module_type(self):
+        data = {"contentModuleType": "STANDARD_TEXT", "headline": "Hello"}
+        mod = build_module_from_json(data)
+        assert mod.module_type == "STANDARD_TEXT"
+
+    def test_build_module_company_logo(self):
+        data = {
+            "contentModuleType": "STANDARD_COMPANY_LOGO",
+            "imageId": "logo-123",
+        }
+        mod = build_module_from_json(data)
+        assert mod.module_type == "STANDARD_COMPANY_LOGO"
+        result = mod.to_dict()
+        assert result["standardCompanyLogo"]["companyLogo"]["image"]["uploadDestinationId"] == "logo-123"
+
+    def test_standard_company_logo_module_to_dict_empty(self):
+        mod = StandardCompanyLogoModule()
+        assert mod.to_dict() == {}
 
     def test_build_module_image_text(self):
         data = {
