@@ -19,7 +19,14 @@ jobs:
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
 
-          OTHER_FILES=$(git diff --name-only "$BASE" "$HEAD" | grep -vE '^setup\.py$|^\.github/workflows/' || true)
+          CHANGED_FILES=$(git diff --name-only "$BASE" "$HEAD")
+
+          if ! echo "$CHANGED_FILES" | grep -q '^setup\.py$'; then
+            echo "⏭️ setup.py not changed; skipping version bump isolation check."
+            exit 0
+          fi
+
+          OTHER_FILES=$(echo "$CHANGED_FILES" | grep -vE '^setup\.py$|^\.github/workflows/' || true)
 
           if [ -n "$OTHER_FILES" ]; then
             echo "❌ Version bump PRs must only modify setup.py (and workflow files)."
