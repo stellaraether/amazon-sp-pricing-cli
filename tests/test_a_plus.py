@@ -75,7 +75,7 @@ class TestDataModels:
         assert "has no content" in doc.validate()[0]
 
     def test_module_validate_empty_content(self):
-        mod = ContentModule("STANDARD_IMAGE_TEXT")
+        mod = ContentModule("STANDARD_TEXT")
         issues = mod.validate(0)
         assert len(issues) == 1
         assert "has no content" in issues[0]
@@ -146,8 +146,25 @@ class TestBuildFromJson:
         mod = build_module_from_json(data)
         assert mod.module_type == "STANDARD_IMAGE_TEXT"
         result = mod.to_dict()
-        assert result["standardImageText"]["headline"]["value"] == "H"
-        assert result["standardImageText"]["image"]["uploadDestinationId"] == "img-1"
+        assert result["standardImageTextOverlay"]["overlayColorType"] == "DARK"
+        assert result["standardImageTextOverlay"]["block"]["headline"]["value"] == "H"
+        assert result["standardImageTextOverlay"]["block"]["body"]["textList"][0]["value"] == "B"
+        assert result["standardImageTextOverlay"]["block"]["image"]["uploadDestinationId"] == "img-1"
+
+    def test_build_module_image_text_overlay(self):
+        data = {
+            "moduleType": "STANDARD_IMAGE_TEXT_OVERLAY",
+            "headline": "H",
+            "body": "B",
+            "imageId": "img-1",
+            "overlayColorType": "LIGHT",
+        }
+        mod = build_module_from_json(data)
+        assert mod.module_type == "STANDARD_IMAGE_TEXT_OVERLAY"
+        result = mod.to_dict()
+        assert result["standardImageTextOverlay"]["overlayColorType"] == "LIGHT"
+        assert result["standardImageTextOverlay"]["block"]["headline"]["value"] == "H"
+        assert result["standardImageTextOverlay"]["block"]["body"]["textList"][0]["value"] == "B"
 
     def test_build_module_comparison_table(self):
         data = {
@@ -225,11 +242,14 @@ class TestBuildFromJson:
         assert logo_module["companyLogo"]["imageCropSpecification"]["size"]["width"]["value"] == 600
 
         for i in range(1, 5):
-            mod = modules[i]["standardImageText"]
-            assert "headline" in mod
-            assert "body" in mod
-            assert "image" in mod
-            assert mod["image"]["uploadDestinationId"].startswith("aplus-media/sc/")
+            mod = modules[i]["standardImageTextOverlay"]
+            assert mod["overlayColorType"] == "DARK"
+            assert "block" in mod
+            assert "headline" in mod["block"]
+            assert "body" in mod["block"]
+            assert "textList" in mod["block"]["body"]
+            assert "image" in mod["block"]
+            assert mod["block"]["image"]["uploadDestinationId"].startswith("aplus-media/sc/")
 
 
 class TestAPlusCLI:
