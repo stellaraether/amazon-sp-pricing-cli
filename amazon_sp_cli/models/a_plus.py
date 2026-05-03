@@ -157,6 +157,19 @@ class StandardImageTextOverlayModule:
         return result
 
 
+class StandardCompanyLogoModule:
+    """Standard Company Logo module."""
+
+    def __init__(self, company_logo=None):
+        self.company_logo = company_logo
+
+    def to_dict(self) -> dict:
+        result = {}
+        if self.company_logo:
+            result["companyLogo"] = {"image": self.company_logo.to_dict()}
+        return result
+
+
 class ContentModule:
     """A+ Content module wrapper."""
 
@@ -168,6 +181,7 @@ class ContentModule:
         "STANDARD_COMPARISON_TABLE": "standardComparisonTable",
         "STANDARD_TEXT": "standardText",
         "STANDARD_IMAGE_TEXT_OVERLAY": "standardImageTextOverlay",
+        "STANDARD_COMPANY_LOGO": "standardCompanyLogo",
     }
 
     def __init__(
@@ -180,6 +194,7 @@ class ContentModule:
         standard_comparison_table: StandardComparisonTableModule = None,
         standard_text: StandardTextModule = None,
         standard_image_text_overlay: StandardImageTextOverlayModule = None,
+        standard_company_logo: StandardCompanyLogoModule = None,
     ):
         self.module_type = module_type
         self.standard_image_text = standard_image_text
@@ -189,6 +204,7 @@ class ContentModule:
         self.standard_comparison_table = standard_comparison_table
         self.standard_text = standard_text
         self.standard_image_text_overlay = standard_image_text_overlay
+        self.standard_company_logo = standard_company_logo
 
     def to_dict(self) -> dict:
         result = {"contentModuleType": self.module_type}
@@ -208,6 +224,8 @@ class ContentModule:
             result["standardText"] = self.standard_text.to_dict()
         elif field_name == "standardImageTextOverlay" and self.standard_image_text_overlay:
             result["standardImageTextOverlay"] = self.standard_image_text_overlay.to_dict()
+        elif field_name == "standardCompanyLogo" and self.standard_company_logo:
+            result["standardCompanyLogo"] = self.standard_company_logo.to_dict()
 
         return result
 
@@ -287,7 +305,7 @@ def build_content_from_json(name: str, data: dict) -> APlusContentDocument:
 
 def build_module_from_json(data: dict) -> ContentModule:
     """Build ContentModule from JSON dict."""
-    module_type = data.get("moduleType", "STANDARD_TEXT")
+    module_type = data.get("contentModuleType") or data.get("moduleType", "STANDARD_TEXT")
 
     if module_type == "STANDARD_IMAGE_TEXT":
         return ContentModule(
@@ -348,6 +366,13 @@ def build_module_from_json(data: dict) -> ContentModule:
                 headline=TextComponent(data["headline"]) if data.get("headline") else None,
                 body=TextComponent(data["body"]) if data.get("body") else None,
                 image=ImageComponent(data["imageId"]) if data.get("imageId") else None,
+            ),
+        )
+    elif module_type == "STANDARD_COMPANY_LOGO":
+        return ContentModule(
+            module_type=module_type,
+            standard_company_logo=StandardCompanyLogoModule(
+                company_logo=ImageComponent(data["imageId"]) if data.get("imageId") else None,
             ),
         )
     else:
