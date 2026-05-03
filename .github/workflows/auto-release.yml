@@ -47,3 +47,20 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
           echo "Created and pushed tag $TAG"
+
+      - name: Generate Release Notes
+        id: generate_release_notes
+        run: |
+          GIT_LOG=$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD)
+          echo "release_notes=$GIT_LOG" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/create-release@v1
+        with:
+          tag_name: "v${{ steps.get_version.outputs.version }}"
+          release_name: "v${{ steps.get_version.outputs.version }}"
+          body: "${{ steps.generate_release_notes.outputs.release_notes }}"
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
