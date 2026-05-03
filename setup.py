@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="amazon-sp-cli",
-    version="0.2.0",
+    version="0.2.1",
     description="CLI tool for Amazon Selling Partner API (SP-API) operations",
     author="Lunan Li",
     author_email="lunan@stellaraether.com",
