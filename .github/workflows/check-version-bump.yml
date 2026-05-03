@@ -3,7 +3,7 @@ name: Check Version Bump PR
 on:
   pull_request:
     paths:
-      - 'setup.py'
+      - 'amazon_sp_cli/__init__.py'
 
 jobs:
   check-isolated-version-bump:
@@ -21,15 +21,15 @@ jobs:
 
           CHANGED_FILES=$(git diff --name-only "$BASE" "$HEAD")
 
-          if ! echo "$CHANGED_FILES" | grep -q '^setup\.py$'; then
-            echo "⏭️ setup.py not changed; skipping version bump isolation check."
+          if ! echo "$CHANGED_FILES" | grep -q '^amazon_sp_cli/__init__\.py$'; then
+            echo "⏭️ amazon_sp_cli/__init__.py not changed; skipping version bump isolation check."
             exit 0
           fi
 
-          OTHER_FILES=$(echo "$CHANGED_FILES" | grep -vE '^setup\.py$|^\.github/workflows/' || true)
+          OTHER_FILES=$(echo "$CHANGED_FILES" | grep -vE '^amazon_sp_cli/__init__\.py$|^\.github/workflows/' || true)
 
           if [ -n "$OTHER_FILES" ]; then
-            echo "❌ Version bump PRs must only modify setup.py (and workflow files)."
+            echo "❌ Version bump PRs must only modify amazon_sp_cli/__init__.py (and workflow files)."
             echo "Found other changed files:"
             echo "$OTHER_FILES"
             exit 1

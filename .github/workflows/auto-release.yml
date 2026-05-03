@@ -66,10 +66,10 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version from setup.py
+      - name: Extract version
         id: get_version
         run: |
-          VERSION=$(python -c "import re; print(re.search(r'version=\"([^\"]+)\"', open('setup.py').read()).group(1))")
+          VERSION=$(python -c "import re; print(re.search(r'__version__ = \"([^\"]+)\"', open('amazon_sp_cli/__init__.py').read()).group(1))")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Detected version: $VERSION"
 
