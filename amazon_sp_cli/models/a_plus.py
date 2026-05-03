@@ -153,19 +153,23 @@ class StandardTextModule:
 class StandardImageTextOverlayModule:
     """Standard Image with Text Overlay module."""
 
-    def __init__(self, headline=None, image=None, body=None):
+    def __init__(self, headline=None, image=None, body=None, overlay_color_type="DARK"):
         self.headline = headline
         self.image = image
         self.body = body
+        self.overlay_color_type = overlay_color_type
 
     def to_dict(self) -> dict:
-        result = {}
+        result = {"overlayColorType": self.overlay_color_type}
+        block = {}
         if self.headline:
-            result["headline"] = self.headline.to_dict()
+            block["headline"] = self.headline.to_dict()
         if self.image:
-            result["image"] = self.image.to_dict()
+            block["image"] = self.image.to_dict()
         if self.body:
-            result["body"] = self.body.to_dict()
+            block["body"] = self.body.to_dict()
+        if block:
+            result["block"] = block
         return result
 
 
@@ -186,7 +190,7 @@ class ContentModule:
     """A+ Content module wrapper."""
 
     MODULE_TYPES = {
-        "STANDARD_IMAGE_TEXT": "standardImageText",
+        "STANDARD_IMAGE_TEXT": "standardImageTextOverlay",
         "STANDARD_SINGLE_IMAGE": "standardSingleImage",
         "STANDARD_MULTIPLE_IMAGE_TEXT": "standardMultipleImageText",
         "STANDARD_FOUR_IMAGE_TEXT": "standardFourImageText",
@@ -222,8 +226,8 @@ class ContentModule:
         result = {"contentModuleType": self.module_type}
         field_name = self.MODULE_TYPES.get(self.module_type)
 
-        if field_name == "standardImageText" and self.standard_image_text:
-            result["standardImageText"] = self.standard_image_text.to_dict()
+        if field_name == "standardImageTextOverlay" and self.standard_image_text_overlay:
+            result["standardImageTextOverlay"] = self.standard_image_text_overlay.to_dict()
         elif field_name == "standardSingleImage" and self.standard_single_image:
             result["standardSingleImage"] = self.standard_single_image.to_dict()
         elif field_name == "standardMultipleImageText" and self.standard_multiple_image_text:
@@ -234,8 +238,6 @@ class ContentModule:
             result["standardComparisonTable"] = self.standard_comparison_table.to_dict()
         elif field_name == "standardText" and self.standard_text:
             result["standardText"] = self.standard_text.to_dict()
-        elif field_name == "standardImageTextOverlay" and self.standard_image_text_overlay:
-            result["standardImageTextOverlay"] = self.standard_image_text_overlay.to_dict()
         elif field_name == "standardCompanyLogo" and self.standard_company_logo:
             result["standardCompanyLogo"] = self.standard_company_logo.to_dict()
 
@@ -320,19 +322,38 @@ def build_module_from_json(data: dict) -> ContentModule:
     module_type = data.get("contentModuleType") or data.get("moduleType", "STANDARD_TEXT")
 
     if module_type == "STANDARD_IMAGE_TEXT":
+        body = None
+        if data.get("body"):
+            body = ParagraphComponent(text_list=[TextComponent(data["body"])])
         return ContentModule(
             module_type=module_type,
-            standard_image_text=StandardImageTextModule(
+            standard_image_text_overlay=StandardImageTextOverlayModule(
                 headline=TextComponent(data["headline"]) if data.get("headline") else None,
-                body=TextComponent(data["body"]) if data.get("body") else None,
-                image=ImageComponent(data["imageId"]) if data.get("imageId") else None,
+                body=body,
+                image=(
+                    ImageComponent(
+                        data["imageId"],
+                        alt_text=data.get("altText"),
+                        image_crop_specification=data.get("imageCropSpecification"),
+                    )
+                    if data.get("imageId")
+                    else None
+                ),
             ),
         )
     elif module_type == "STANDARD_SINGLE_IMAGE":
         return ContentModule(
             module_type=module_type,
             standard_single_image=StandardSingleImageModule(
-                image=ImageComponent(data["imageId"]) if data.get("imageId") else None,
+                image=(
+                    ImageComponent(
+                        data["imageId"],
+                        alt_text=data.get("altText"),
+                        image_crop_specification=data.get("imageCropSpecification"),
+                    )
+                    if data.get("imageId")
+                    else None
+                ),
                 image_caption=TextComponent(data["caption"]) if data.get("caption") else None,
             ),
         )
@@ -372,12 +393,24 @@ def build_module_from_json(data: dict) -> ContentModule:
             ),
         )
     elif module_type == "STANDARD_IMAGE_TEXT_OVERLAY":
+        body = None
+        if data.get("body"):
+            body = ParagraphComponent(text_list=[TextComponent(data["body"])])
         return ContentModule(
             module_type=module_type,
             standard_image_text_overlay=StandardImageTextOverlayModule(
                 headline=TextComponent(data["headline"]) if data.get("headline") else None,
-                body=TextComponent(data["body"]) if data.get("body") else None,
-                image=ImageComponent(data["imageId"]) if data.get("imageId") else None,
+                body=body,
+                image=(
+                    ImageComponent(
+                        data["imageId"],
+                        alt_text=data.get("altText"),
+                        image_crop_specification=data.get("imageCropSpecification"),
+                    )
+                    if data.get("imageId")
+                    else None
+                ),
+                overlay_color_type=data.get("overlayColorType", "DARK"),
             ),
         )
     elif module_type == "STANDARD_COMPANY_LOGO":
