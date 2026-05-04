@@ -6,9 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -59,6 +56,9 @@ jobs:
     needs: [build, pre-commit, test]
     runs-on: ubuntu-latest
     if: github.repository == 'stellaraether/amazon-sp-cli'
+    permissions:
+      contents: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -103,25 +103,10 @@ jobs:
           TAG="v${{ steps.get_version.outputs.version }}"
           gh release create "$TAG" --title "$TAG" --generate-notes
 
-      - name: Set up Python
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install build dependencies
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-
       - name: Build package
         if: steps.check_tag.outputs.exists == 'false'
-        run: python -m build
+        uses: pypa/build@release/v1
 
       - name: Publish to PyPI
         if: steps.check_tag.outputs.exists == 'false'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
