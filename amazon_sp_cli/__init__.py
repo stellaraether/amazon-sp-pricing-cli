@@ -1,3 +1,3 @@
-# Amazon SP-API CLI
+# Amazon SP-API CLI tool
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
