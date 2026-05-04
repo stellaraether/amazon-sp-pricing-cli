@@ -9,6 +9,14 @@ from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 
 
+class SPAPIError(Exception):
+    """Raised when SP-API returns an error response."""
+
+    def __init__(self, message, response_body=None):
+        super().__init__(message)
+        self.response_body = response_body
+
+
 class SPAPIClient:
     """Client for making signed requests to Amazon SP-API."""
 
@@ -55,7 +63,17 @@ class SPAPIClient:
         headers, url, body = self._sign_request(method, path, data)
 
         response = requests.request(method, url, headers=headers, data=body)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            try:
+                error_body = response.json()
+            except ValueError:
+                error_body = None
+            raise SPAPIError(
+                _format_spapi_error(response.status_code, error_body or response.text),
+                response_body=error_body,
+            ) from exc
 
         return response.json() if response.text else {}
 
@@ -64,10 +82,40 @@ class SPAPIClient:
         path = f"/listings/2021-08-01/items/{self.seller_id}/{sku}"
         params = {
             "marketplaceIds": self.marketplace_id,
-            "includedData": "summaries,attributes",
+            "includedData": "summaries,attributes,issues,offers,fulfillmentAvailability",
         }
         path += "?" + urlencode(params)
         return self.request("GET", path)
+
+    def put_listing(
+        self, sku: str, product_type: str, attributes: dict, requirements: str = None, mode: str = None
+    ) -> dict:
+        """Create or fully replace a listing for a SKU."""
+        path = f"/listings/2021-08-01/items/{self.seller_id}/{sku}"
+        params = {
+            "marketplaceIds": self.marketplace_id,
+        }
+        if mode:
+            params["mode"] = mode
+        path += "?" + urlencode(params)
+
+        data = {
+            "productType": product_type,
+            "attributes": attributes,
+        }
+        if requirements:
+            data["requirements"] = requirements
+
+        return self.request("PUT", path, data)
+
+    def delete_listing(self, sku: str) -> dict:
+        """Delete a listing for a SKU."""
+        path = f"/listings/2021-08-01/items/{self.seller_id}/{sku}"
+        params = {
+            "marketplaceIds": self.marketplace_id,
+        }
+        path += "?" + urlencode(params)
+        return self.request("DELETE", path)
 
     def update_price(self, sku: str, price: float, mode: str = "VALIDATION_PREVIEW") -> dict:
         """Update listing price."""
@@ -189,3 +237,22 @@ class SPAPIClient:
             params["fileName"] = file_name
         path += "?" + urlencode(params)
         return self.request("POST", path)
+
+
+def _format_spapi_error(status_code, body):
+    """Format an SP-API error into a human-readable string."""
+    if isinstance(body, dict):
+        parts = [f"SP-API returned {status_code}"]
+        for error in body.get("errors", []):
+            code = error.get("code", "Unknown")
+            message = error.get("message", "")
+            parts.append(f"  [{code}] {message}")
+        for issue in body.get("issues", []):
+            code = issue.get("code", "Unknown")
+            message = issue.get("message", "")
+            severity = issue.get("severity", "")
+            parts.append(f"  [{code}] ({severity}) {message}")
+        if len(parts) == 1:
+            parts.append(f"  {json.dumps(body)}")
+        return "\n".join(parts)
+    return f"SP-API returned {status_code}: {body}"
